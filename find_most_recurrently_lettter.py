@@ -1,4 +1,5 @@
-﻿from Wordlist import*
+# Wörterbuch-liste
+from Wordlist import*
 
 letters_freq = []
 
