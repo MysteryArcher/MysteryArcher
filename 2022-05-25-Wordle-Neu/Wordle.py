@@ -84,9 +84,6 @@ class Wordle:
         self.wurzel.protocol("WM_DELETE_WINDOW", self.stop)
         self.wurzel.config(bg=self.schwarz)
 
-        self.image = PhotoImage(file="icon.png")
-        self.icon = Label(self.wurzel, image=self.image)
-
         self.versuch = 0
 
         self.eingabe = Entry(self.wurzel)
