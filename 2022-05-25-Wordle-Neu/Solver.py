@@ -1,11 +1,38 @@
 import random
-
+import string
+import tkinter as tk
 from Wordle import Wordle
 
 class Solver:
+
+    def __init__(self, wordle: Wordle):
+        self.wordle = wordle
+        self.buchstabenwertungen = {}
+        for buchstabe in string.ascii_uppercase:
+            self.buchstabenwertungen[buchstabe] = 0
+        for wort in self.wordle.wörterbuch:
+            for buchstabe in set(wort):
+                self.buchstabenwertungen[buchstabe] += 1
+
+        # for key, value in self.buchstabenwertungen.items():
+        #     if value > 100:
+        #         print(key, value)
+
+        self.wortwertungen = {}
+        for wort in self.wordle.wörterbuch:
+            wort_wertung = 0
+            for buchstabe in set(wort):
+                wort_wertung += self.buchstabenwertungen[buchstabe]
+            self.wortwertungen[wort] = wort_wertung
+
+        # for key, value in self.wortwertungen.items():
+        #     if value > 2300:
+        #         print(key, value)
+
+
     # Erhält eine Wordle-Instanz und versucht diese mittels bloßem Raten von Wörtern zu lösen
     # Falls erfolgreich, wird die Anzahl benötigter Versuche zurückgegeben, ansonsten -1
-    def random_solve(self, wordle: Wordle) -> int:
+    def random_solve(self) -> int:
 
         anzahl_versuche = 0
 
@@ -14,20 +41,19 @@ class Solver:
             anzahl_versuche += 1
 
             # Zufällg ein Wort aussuchen
-            wort = random.choice(wordle.wörterbuch)
+            wort = random.choice(self.wordle.wörterbuch)
 
             # Diese Kombination im Wordle ausprobieren
-            if wordle.auswerten(wort) == ["grün", "grün", "grün", "grün", "grün"]:
+            if self.wordle.auswerten(wort) == ["grün", "grün", "grün", "grün", "grün"]:
                 # Falls sie richtig war, beende
                 return anzahl_versuche
 
 
     # Erhält eine Wordle-Instanz und versucht diese mittels systematischem Ausprobieren von Wörtern zu lösen
     # Falls erfolgreich, wird die Anzahl benötigter Versuche zurückgegeben, ansonsten -1
-    def brute_force_solve(self, wordle: Wordle) -> int:            
-        
-        for i in range(len(wordle.wörterbuch)):
-            if wordle.auswerten(wordle.wörterbuch[i]) == ["grün", "grün", "grün", "grün", "grün"]:
+    def brute_force_solve(self) -> int:
+        for i in range(len(self.wordle.wörterbuch)):
+            if self.wordle.auswerten(self.wordle.wörterbuch[i]) == ["grün", "grün", "grün", "grün", "grün"]:
                 return i + 1
 
      # Gibt True zurück, falls wort mit allen bisherigen Ergebnissen noch möglich ist, ansonsten False
@@ -39,9 +65,9 @@ class Solver:
                 return False
         return True
 
-    def __wortfilter(self, wordle: Wordle, bisherige_ergebnisse: dict) -> list:
+    def __wortfilter(self, bisherige_ergebnisse: dict) -> list:
         mögliche_worter = []
-        for wort in wordle.wörterbuch:
+        for wort in self.wordle.wörterbuch:
             if self.__wort_konsistent(wort, bisherige_ergebnisse):
                 mögliche_worter.append(wort)
         return mögliche_worter
@@ -80,24 +106,42 @@ class Solver:
         
         return True
 
+    def wortwahl(self, ergebnisse) -> str:
+        verbleibende_wörter = self.__wortfilter(ergebnisse)
+        bestes_wort = verbleibende_wörter[0]
+        for wort in verbleibende_wörter:
+            if self.wortwertungen[wort] > self.wortwertungen[bestes_wort]:
+                bestes_wort = wort
+        return wort
+
     # Erhält eine Wordle-Instanz und versucht diese möglichst intelligent zu lösen, d.h. die Anzahl benötigter
     # Versuche soll minimiert werden
     # Falls erfolgreich, wird die Anzahl benötigter Versuche zurückgegeben, ansonsten -1
-    def intelligent_solve(self, wordle: Wordle) -> int:
-        print(wordle.wort)
+    def intelligent_solve(self) -> int:
         anzahl_versuche = 0
         ergebnisse = {}
         while True:
             anzahl_versuche += 1
-            geratenes_wort = random.choice(self.__wortfilter(wordle, ergebnisse))
+            geratenes_wort = self.wortwahl(ergebnisse)
             #print(geratenes_wort)
-            ergebnisse[geratenes_wort] = wordle.auswerten(geratenes_wort)
+            ergebnisse[geratenes_wort] = self.wordle.auswerten(geratenes_wort)
             #print(ergebnisse[geratenes_wort])
             if ergebnisse[geratenes_wort] == ["grün", "grün", "grün", "grün", "grün"]:
                 return anzahl_versuche
 
 w = Wordle()
-s = Solver()
-w.wort_auswählen()
-#w.wort = "GEHEN"
-print(s.intelligent_solve(w))
+s = Solver(w)
+
+# gelöste_instanzen = 0
+# for i in range(1000):
+#     w.wort_auswählen()
+#     if s.intelligent_solve() <= 6:
+#         gelöste_instanzen += 1
+# print(gelöste_instanzen / 1000)
+
+print(s.wortwahl({"KRIEG": ["grau", "grau", "grau", "grau", "grau"], "DATUM": ["grau", "grau", "grau", "gelb", "grau"], "BUSCH": ["grau", "grün", "gelb", "gelb", "gelb"], "FUCHS": ["grau", "grün", "grün", "grün", "grün"], "WUCHS": ["grau", "grün", "grün", "grün", "grün"]}))
+
+# 1. Was ist der häufigste Buchstabe im Wörterbuch aus Wordlist.py?
+# 2. (Optional) Erstelle ein Ranking aller Buchstaben nach Häufigkeit im Wörterbuch aus Wordlist.py! Am besten als Dictionary.
+
+# TODO GUI
